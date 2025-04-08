@@ -1,0 +1,154 @@
+<div class="tracker-container">
+  <h1>Cash Stuffing App</h1>
+  <mat-tab-header>
+    <div class="tabs">
+      <button mat-raised-button *ngFor="let tab of tabs" [class.active]="activeTab === tab" (click)="switchTab(tab)">
+        {{ tab }}
+      </button>
+    </div>
+  </mat-tab-header>
+
+  <div class="content" *ngIf="activeTab === 'Categories & Budgets'">
+    <h1>Categories & Budgets Management</h1>
+    <br>
+    <h2>Add / Delete Category</h2>
+    <form [formGroup]="categoryForm" (ngSubmit)="onAddCategory()">
+      <mat-form-field appearance="outline" class="w-full my-2">
+        <mat-label>Select Category</mat-label>
+        <mat-select formControlName="name">
+          <mat-option *ngFor="let c of categoryOptions" [value]="c">
+            {{ c }}
+          </mat-option>
+        </mat-select>
+      </mat-form-field>
+      <button mat-raised-button color="primary" type="submit">Add Category</button>
+    </form>
+
+<!--    <ul>-->
+<!--      <li *ngFor="let budget of budgets">-->
+<!--        {{ budget.name }} :  {{budget.remainBudget}} Euro-->
+<!--        <button mat-raised-button color="warn" (click)="onRemoveCategory(budget.name)"><mat-icon>delete</mat-icon>Remove</button>-->
+<!--      </li>-->
+<!--    </ul>-->
+    <br>
+    <h2>Set Budget of Category</h2>
+    <form [formGroup]="budgetForm" (ngSubmit)="onSetBudget()">
+      <mat-form-field appearance="outline" class="w-full my-2">
+        <mat-label>Category</mat-label>
+        <mat-select formControlName="category">
+          <mat-option *ngFor="let budget of budgets" [value]="budget.name">
+            {{ budget.name }}
+          </mat-option>
+        </mat-select>
+      </mat-form-field>
+      <mat-form-field appearance="outline" class="w-full my-2">
+        <mat-label>Budget Amount</mat-label>
+        <input matInput id="budget" type="number" formControlName="budget" />
+      </mat-form-field>
+      <mat-slide-toggle formControlName="allowExtra" class="toggle">
+        Allow overspent?
+      </mat-slide-toggle>
+      <mat-form-field *ngIf="budgetForm.get('allowExtra')?.value" appearance="outline" class="w-full my-2">
+        <mat-label>Overspent Allowed: (in percentage)</mat-label>
+        <input matInput id="extraAllowed" type="number" formControlName="extraAllowed" />
+      </mat-form-field>
+      <button mat-raised-button color="primary" type="submit">Set Budget</button>
+    </form>
+<!--    <ul>-->
+<!--      <li *ngFor="let budget of budgets">-->
+<!--        {{ budget.name }}: {{ budget.presetBudget | number: '1.2-2' }} € {{budget.allowExtra? '(exceed up to ' + budget.extraAllowed + ' % / ' + (budget.presetBudget * budget.extraAllowed / 100) + ' € allowed)' : ''}}-->
+<!--      </li>-->
+<!--    </ul>-->
+    <br>
+    <table mat-table [dataSource]="budgets" class="mat-elevation-z8">
+      <ng-container matColumnDef="category">
+        <th mat-header-cell *matHeaderCellDef>Category</th>
+        <td mat-cell *matCellDef="let budget">{{ budget.name }}</td>
+      </ng-container>
+      <ng-container matColumnDef="planedBudget">
+        <th mat-header-cell *matHeaderCellDef>Budget Planed</th>
+        <td mat-cell *matCellDef="let budget">{{ budget.presetBudget | number: '1.2-2' }}
+          {{budget.allowExtra? '(+ ' + (budget.presetBudget * budget.extraAllowed / 100) + ')' : ''}} €</td>
+      </ng-container>
+      <ng-container matColumnDef="remainBudget">
+        <th mat-header-cell *matHeaderCellDef>Budget Left</th>
+        <td mat-cell *matCellDef="let budget">{{ budget.remainBudget }} €</td>
+      </ng-container>
+      <ng-container matColumnDef="action">
+        <th mat-header-cell *matHeaderCellDef>Action</th>
+        <td mat-cell *matCellDef="let budget">
+          <button mat-raised-button color="warn" (click)="onRemoveCategory(budget.name)">
+            <mat-icon>delete</mat-icon>Remove
+          </button>
+        </td>
+      </ng-container>
+      <tr mat-header-row *matHeaderRowDef="displayedColumns"></tr>
+      <tr mat-row *matRowDef="let row; columns: displayedColumns;"></tr>
+    </table>
+  </div>
+
+  <div class="content" *ngIf="activeTab === 'Transactions'">
+    <h2>Transaction Management</h2>
+    <ul>
+      <li *ngFor="let budget of budgets">
+        {{ budget.name }} Budget left: {{ budget.remainBudget >= 0 ? (budget.remainBudget | number: '1.2-2') : 0 }} of {{ budget.presetBudget | number: '1.2-2' }} € {{ budget.allowExtra ? '(Total ' + budget.name  + ' Budget up to ' + (budget.presetBudget * (1 + budget.extraAllowed / 100) | number: '1.2-2') + ' € allowed)' : '' }}
+      </li>
+    </ul>
+    <h3>Total Budgets: {{ totalAmount | number: '1.2-2' }} €</h3>
+    <h3>Remain Budgets: {{ remainAmount | number: '1.2-2' }} €</h3>
+    <form [formGroup]="transactionForm" (ngSubmit)="onAddTransaction()">
+      <mat-button-toggle-group formControlName="type" appearance="standard" class="my-2 toggle-group">
+        <mat-button-toggle value="output">Output</mat-button-toggle>
+        <mat-button-toggle value="input">Input</mat-button-toggle>
+      </mat-button-toggle-group>
+      <mat-form-field appearance="outline" class="w-full my-2">
+        <mat-label>Transaction Value:</mat-label>
+        <input matInput id="value" type="number" formControlName="value" />
+      </mat-form-field>
+      <mat-form-field appearance="outline" class="w-full my-2">
+        <mat-label>Category:</mat-label>
+        <mat-select formControlName="category">
+          <mat-option *ngFor="let budget of budgets" [value]="budget.name">
+            {{ budget.name }}
+          </mat-option>
+        </mat-select>
+      </mat-form-field>
+      <mat-form-field appearance="outline" class="w-full my-2">
+        <mat-label>Transaction Date:</mat-label>
+        <input matInput id="date" [matDatepicker]="picker" formControlName="date" readonly />
+        <mat-datepicker-toggle matSuffix [for]="picker"></mat-datepicker-toggle>
+        <mat-datepicker #picker></mat-datepicker>
+      </mat-form-field>
+      <button mat-raised-button color="primary" type="submit">Add Transaction</button>
+    </form>
+    <h3>Transactions</h3>
+    <table class="tab-body">
+      <thead>
+      <tr>
+        <th>Category</th>
+        <th>Date</th>
+        <th>Amount</th>
+        <th>Action</th>
+      </tr>
+      </thead>
+      <tbody>
+      <tr *ngFor="let transaction of transactions; let i = index">
+        <td>{{ transaction.category }}</td>
+        <td>{{ transaction.date}}</td>
+        <td>{{ transaction.type === 'output' ? '-' : '+'}}{{ transaction.amount | number: '1.2-2' }} €</td>
+        <td>
+          <button mat-raised-button color="warn" (click)="onDeleteTransaction(i)">Delete</button>
+        </td>
+      </tr>
+      </tbody>
+    </table>
+    <div class="content">
+      <h2>Transaction Chart</h2>
+      <div class="chart-controls">
+        <button mat-raised-button color="primary" (click)="renderChart('doughnut')">Doughnut Chart</button>
+        <button mat-raised-button color="primary" (click)="renderChart('bar')">Bar Chart</button>
+      </div>
+      <canvas id="transactionChart"></canvas>
+    </div>
+  </div>
+</div>

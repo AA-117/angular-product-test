@@ -1,0 +1,306 @@
+<div class="dashboard-container bg-slate-50 min-h-screen dark:bg-slate-900">
+  <div class="container mx-auto p-4 md:p-6">
+    <!-- Header -->
+    <div class="flex flex-col md:flex-row justify-between items-start md:items-center mb-6">
+      <div>
+        <h1 class="text-2xl font-bold">Banking Dashboard</h1>
+        <p class="text-muted">Manage your finances in one place</p>
+      </div>
+      <div class="flex items-center mt-4 md:mt-0">
+        <button class="btn-icon mr-2" aria-label="Notifications">
+          <i class="fas fa-bell"></i>
+        </button>
+      </div>
+    </div>
+
+    <!-- Dashboard Grid -->
+    <div class="dashboard-grid">
+      <!-- Balance Card -->
+      <div class="card span-4 balance-card">
+        <div class="card-content">
+          <div class="flex justify-between items-start">
+            <div>
+              <h2 class="text-xl font-medium text-blue-100">Hello, Alex 👋</h2>
+              <p class="text-blue-100/80 text-sm">Your current balance</p>
+              <h1 class="text-4xl md:text-5xl font-bold mt-2 mb-4">
+                {{userBalance.currency}}{{userBalance.total.toFixed(2)}}
+              </h1>
+              <div class="flex items-center text-blue-100/90 text-sm">
+                <i class="fas fa-arrow-up mr-1"></i>
+                <span>+{{userBalance.percentageChange}}% from last month</span>
+              </div>
+            </div>
+            <div class="hidden md:block opacity-20">
+              <i class="fas fa-wallet text-9xl"></i>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Quick Actions Card -->
+      <div class="card span-2">
+        <div class="card-header">
+          <h3 class="card-title">Quick Actions</h3>
+          <p class="card-description">Manage your money easily</p>
+        </div>
+        <div class="card-content">
+          <div class="quick-actions-grid">
+            <button class="btn action-btn">
+              <i class="fas fa-plus"></i>
+              <span>Add Money</span>
+            </button>
+            <button class="btn-outline action-btn">
+              <i class="fas fa-paper-plane"></i>
+              <span>Send Money</span>
+            </button>
+            <button class="btn-outline action-btn">
+              <i class="fas fa-wallet"></i>
+              <span>Create Pocket</span>
+            </button>
+            <button class="btn-outline action-btn">
+              <i class="fas fa-credit-card"></i>
+              <span>Card Settings</span>
+            </button>
+          </div>
+        </div>
+      </div>
+
+      <!-- Spending Overview Card -->
+      <div class="card span-2">
+        <div class="card-header">
+          <div class="flex justify-between items-center">
+            <div>
+              <h3 class="card-title">Spending Overview</h3>
+              <p class="card-description">Monthly budget tracking</p>
+            </div>
+            <i class="fas fa-chart-line text-muted"></i>
+          </div>
+        </div>
+        <div class="card-content">
+          <div class="space-y-4">
+            <div>
+              <div class="flex justify-between mb-1 text-sm">
+                <span>Monthly Budget</span>
+                <span class="font-medium">
+                  {{userBalance.currency}}{{budgetProgress.current}} / {{userBalance.currency}}{{budgetProgress.max}}
+                </span>
+              </div>
+              <div class="progress-container">
+                <div class="progress-bar" [style.width.%]="budgetProgress.percentage"></div>
+              </div>
+            </div>
+
+            <div class="spending-categories-grid">
+              <div *ngFor="let category of spendingCategories; trackBy: trackById" class="category-item">
+                <p class="text-xs text-muted">{{category.name}}</p>
+                <p class="font-medium">{{userBalance.currency}}{{category.amount}}</p>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Transactions/Insights Card -->
+      <div class="card span-4">
+        <div class="card-header">
+          <h3 class="card-title">Activity</h3>
+          <p class="card-description">Your recent financial activity</p>
+        </div>
+        <div class="card-content">
+          <div class="tabs">
+            <button
+              class="tab-button"
+              [class.active]="activeTab === 'transactions'"
+              (click)="setActiveTab('transactions')"
+              role="tab"
+              [attr.aria-selected]="activeTab === 'transactions' ? 'true' : 'false'"
+              aria-controls="transactions-content">
+              Transactions
+            </button>
+            <button
+              class="tab-button"
+              [class.active]="activeTab === 'insights'"
+              (click)="setActiveTab('insights')"
+              role="tab"
+              [attr.aria-selected]="activeTab === 'insights' ? 'true' : 'false'"
+              aria-controls="insights-content">
+              Insights
+            </button>
+          </div>
+
+          <div *ngIf="activeTab === 'transactions'" id="transactions-content" role="tabpanel">
+            <ul class="transactions-list">
+              <li *ngFor="let transaction of transactions; trackBy: trackById" class="transaction-item">
+                <div class="flex items-center">
+                  <div class="transaction-icon" [ngClass]="{'income-icon': transaction.type === 'income', 'expense-icon': transaction.type === 'expense'}">
+                    <i class="fas fa-{{transaction.icon}}"></i>
+                  </div>
+                  <div>
+                    <p class="font-medium">{{transaction.title}}</p>
+                    <p class="text-xs text-muted">{{formatDate(transaction.date)}}</p>
+                  </div>
+                </div>
+                <span class="font-medium" [ngClass]="{'text-green-500': transaction.type === 'income', 'text-red-500': transaction.type === 'expense'}">
+                  {{transaction.type === 'income' ? '+' : '-'}}{{userBalance.currency}}{{transaction.amount.toFixed(2)}}
+                </span>
+              </li>
+            </ul>
+            <div class="text-center mt-4">
+              <button class="btn-ghost btn-sm">View All Transactions</button>
+            </div>
+          </div>
+
+          <div *ngIf="activeTab === 'insights'" id="insights-content" role="tabpanel">
+            <div class="insight-alert">
+              <div class="flex items-start mb-2">
+                <div class="insight-icon">
+                  <i class="fas fa-chart-line"></i>
+                </div>
+                <div>
+                  <h4 class="font-medium text-amber-800 dark:text-amber-400">Spending Alert</h4>
+                  <p class="text-sm text-amber-700 dark:text-amber-500">
+                    You're spending more on entertainment this month. Consider reviewing your subscriptions.
+                  </p>
+                </div>
+              </div>
+              <div class="progress-container amber-progress">
+                <div class="progress-bar" style="width: 85%"></div>
+              </div>
+              <p class="text-xs text-amber-700 dark:text-amber-500 mt-1">
+                85% increase compared to last month
+              </p>
+            </div>
+
+            <div class="insights-grid mt-4">
+              <div class="insight-panel">
+                <h4 class="font-medium mb-2">Spending Breakdown</h4>
+                <div class="space-y-2">
+                  <div *ngFor="let item of spendingBreakdown; trackBy: trackById">
+                    <div class="flex justify-between text-sm mb-1">
+                      <span>{{item.category}}</span>
+                      <span>{{userBalance.currency}}{{item.amount}}</span>
+                    </div>
+                    <div class="progress-container">
+                      <div class="progress-bar" [style.width.%]="item.percentage"></div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              <div class="insight-panel">
+                <h4 class="font-medium mb-2">Recommendations</h4>
+                <ul class="recommendations-list">
+                  <li class="recommendation-item">
+                    <div class="recommendation-icon">
+                      <i class="fas fa-arrow-up"></i>
+                    </div>
+                    <span>Set up automatic savings for your goals</span>
+                  </li>
+                  <li class="recommendation-item">
+                    <div class="recommendation-icon">
+                      <i class="fas fa-arrow-up"></i>
+                    </div>
+                    <span>Review your subscription services</span>
+                  </li>
+                  <li class="recommendation-item">
+                    <div class="recommendation-icon">
+                      <i class="fas fa-arrow-up"></i>
+                    </div>
+                    <span>Create a budget for your upcoming vacation</span>
+                  </li>
+                </ul>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Your Card -->
+      <div class="card span-2">
+        <div class="card-header">
+          <div class="flex items-center gap-2">
+            <i class="fas fa-credit-card text-blue-500"></i>
+            <h3 class="card-title">Your Card</h3>
+          </div>
+          <p class="card-description">Manage your payment methods</p>
+        </div>
+        <div class="card-content">
+          <div class="credit-card">
+            <div class="credit-card-header">
+              <div>
+                <p class="text-xs text-blue-200">Balance</p>
+                <p class="text-xl font-bold">{{userBalance.currency}}{{userBalance.total.toFixed(2)}}</p>
+              </div>
+              <div class="card-chip">
+                <i class="fas fa-credit-card"></i>
+              </div>
+            </div>
+
+            <p class="card-number">**** **** **** 1234</p>
+
+            <div class="credit-card-footer">
+              <div>
+                <p class="text-xs text-blue-200">Card Holder</p>
+                <p class="font-medium">Alex Johnson</p>
+              </div>
+              <div>
+                <p class="text-xs text-blue-200">Expires</p>
+                <p class="font-medium">12/25</p>
+              </div>
+            </div>
+          </div>
+
+          <div class="card-actions">
+            <button class="btn-outline">
+              Freeze Card
+            </button>
+            <button class="btn-outline">
+              Card Details
+            </button>
+          </div>
+        </div>
+      </div>
+
+      <!-- Savings Goals Card -->
+      <div class="card span-2">
+        <div class="card-header">
+          <div class="flex items-center gap-2">
+            <i class="fas fa-piggy-bank text-blue-500"></i>
+            <h3 class="card-title">Savings Goals</h3>
+          </div>
+          <p class="card-description">Track your savings progress</p>
+        </div>
+        <div class="card-content">
+          <div class="savings-goals">
+            <div *ngFor="let goal of savingsGoals; trackBy: trackById" class="savings-goal">
+              <div class="flex justify-between items-center mb-2">
+                <h4 class="font-medium">{{goal.title}}</h4>
+                <span class="goal-status" [ngClass]="'status-' + goal.status">
+                  {{goal.status === 'in-progress' ? 'In Progress' : goal.status === 'ongoing' ? 'Ongoing' : 'Completed'}}
+                </span>
+              </div>
+              <div class="flex justify-between text-sm mb-1">
+                <span>Progress</span>
+                <span class="font-medium">
+                  {{userBalance.currency}}{{goal.currentAmount}} / {{userBalance.currency}}{{goal.targetAmount}}
+                </span>
+              </div>
+              <div class="progress-container">
+                <div class="progress-bar" [style.width.%]="(goal.currentAmount / goal.targetAmount) * 100"></div>
+              </div>
+              <div class="flex justify-between items-center text-xs text-muted">
+                <span>Started: {{formatDate(goal.startDate)}}</span>
+                <span>{{goal.targetDate ? 'Target: ' + formatDate(goal.targetDate) : 'No end date'}}</span>
+              </div>
+            </div>
+          </div>
+
+          <button class="btn-ghost btn-sm w-full mt-4">
+            <i class="fas fa-plus mr-1"></i> Add New Goal
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+

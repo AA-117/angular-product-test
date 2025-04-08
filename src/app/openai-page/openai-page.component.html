@@ -1,0 +1,32 @@
+<div class="container">
+  <h2>OpenAI Single Chat</h2>
+
+  <textarea [(ngModel)]="userInput" placeholder="Ask OpenAI..." rows="3"></textarea>
+  <button (click)="generateResponse()">Send</button>
+
+  <div *ngIf="chatResponse">
+    <h3>Response:</h3>
+    <p>{{ chatResponse }}</p>
+  </div>
+</div>
+
+
+<div class="chat-container">
+  <h2>OpenAI Chatbot</h2>
+  <div class="option-container">
+    <select id="option" [(ngModel)]="selectedOption" (change)="updateInput()">
+      <option value="">-- Select --</option>
+      <option *ngFor="let option of operationOptions" [value]="option">{{option}}</option>
+    </select>
+  </div>
+  <div class="chat-box">
+    <div *ngFor="let msg of chatHistory" class="message-container" [ngClass]="{'user':msg.role === 'user', 'bot': msg.role === 'assistant'}">
+      <div class="message" *ngIf="(msg.role !== 'system') && (msg.type === 'text')"><strong>{{ msg.role | titlecase}}:</strong> {{msg.content}}</div>
+      <img class="chat-image" *ngIf="msg.type === 'image'" [src]="msg.content"/>
+    </div>
+  </div>
+
+  <textarea #textAreaElement [(ngModel)]="userChatInput" placeholder="Type a message..." rows="3">
+  </textarea>
+  <button (click)="generateChatResponse()">Send</button>
+</div>
