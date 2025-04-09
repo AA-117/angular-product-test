@@ -45,7 +45,7 @@
                 }
               ],
               "outputHashing": "all",
-              "baseHref": "/angular-production-test/"
+              "baseHref": "/angular-product-test/"
             },
             "development": {
               "optimization": false,
