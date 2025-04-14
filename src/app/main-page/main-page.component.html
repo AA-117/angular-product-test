@@ -23,13 +23,6 @@
       </mat-form-field>
       <button mat-raised-button color="primary" type="submit">Add Category</button>
     </form>
-
-<!--    <ul>-->
-<!--      <li *ngFor="let budget of budgets">-->
-<!--        {{ budget.name }} :  {{budget.remainBudget}} Euro-->
-<!--        <button mat-raised-button color="warn" (click)="onRemoveCategory(budget.name)"><mat-icon>delete</mat-icon>Remove</button>-->
-<!--      </li>-->
-<!--    </ul>-->
     <br>
     <h2>Set Budget of Category</h2>
     <form [formGroup]="budgetForm" (ngSubmit)="onSetBudget()">
@@ -54,11 +47,6 @@
       </mat-form-field>
       <button mat-raised-button color="primary" type="submit">Set Budget</button>
     </form>
-<!--    <ul>-->
-<!--      <li *ngFor="let budget of budgets">-->
-<!--        {{ budget.name }}: {{ budget.presetBudget | number: '1.2-2' }} € {{budget.allowExtra? '(exceed up to ' + budget.extraAllowed + ' % / ' + (budget.presetBudget * budget.extraAllowed / 100) + ' € allowed)' : ''}}-->
-<!--      </li>-->
-<!--    </ul>-->
     <br>
     <table mat-table [dataSource]="budgets" class="mat-elevation-z8">
       <ng-container matColumnDef="category">
@@ -119,6 +107,10 @@
         <mat-datepicker-toggle matSuffix [for]="picker"></mat-datepicker-toggle>
         <mat-datepicker #picker></mat-datepicker>
       </mat-form-field>
+      <mat-form-field appearance="outline" class="w-full my-2">
+        <mat-label>Description (optional):</mat-label>
+        <textarea matInput formControlName="description" rows="2"></textarea>
+      </mat-form-field>
       <button mat-raised-button color="primary" type="submit">Add Transaction</button>
     </form>
     <h3>Transactions</h3>
@@ -128,6 +120,7 @@
         <th>Category</th>
         <th>Date</th>
         <th>Amount</th>
+        <th>Description</th>
         <th>Action</th>
       </tr>
       </thead>
@@ -136,6 +129,11 @@
         <td>{{ transaction.category }}</td>
         <td>{{ transaction.date}}</td>
         <td>{{ transaction.type === 'output' ? '-' : '+'}}{{ transaction.amount | number: '1.2-2' }} €</td>
+        <td>
+          <span matTooltip="{{transaction.description}}" class="description-cell">
+            {{ transaction.description ||'-'}}
+          </span>
+        </td>
         <td>
           <button mat-raised-button color="warn" (click)="onDeleteTransaction(i)">Delete</button>
         </td>

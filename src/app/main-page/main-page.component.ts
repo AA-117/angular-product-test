@@ -1,6 +1,7 @@
 import { Component } from '@angular/core';
 import {FormBuilder, FormGroup, Validators} from "@angular/forms";
-import {Chart, ChartConfiguration, ChartData, ChartType, registerables} from "chart.js/auto";
+import {Chart, ChartConfiguration, registerables} from "chart.js/auto";
+import sanitizeHtml from 'sanitize-html';
 
 Chart.register(...registerables)
 
@@ -8,7 +9,8 @@ interface Transaction {
   category: string,
   amount: number,
   date: string,
-  type: string
+  type: string,
+  description?: string
 }
 
 @Component({
@@ -58,7 +60,8 @@ export class MainPageComponent {
       value: [''],
       category: [''],
       date: [''],
-      type: ['output', Validators.required]
+      type: ['output', Validators.required],
+      description: ['']
     });
 
     this.budgetForm = this.fb.group({
@@ -116,10 +119,14 @@ export class MainPageComponent {
   }
 
   onAddTransaction(): void {
-    const { type, value, category, date } = this.transactionForm.value;
+    const { type, value, category, date, description } = this.transactionForm.value;
     const amount = parseFloat(value);
     const formatDate = new Date(date).toLocaleDateString('de-DE');
-    const newObj = {category: category, amount: amount, date: formatDate, type: type} as Transaction;
+    const desc = description!== null ? sanitizeHtml(description, {
+      allowedTags: [],
+      allowedAttributes: {}
+    }) : '';
+    const newObj = {category: category, amount: amount, date: formatDate, type: type, description: desc} as Transaction;
     if(type === 'output'){
       if (!isNaN(amount) && category && date) {
         const budgetToUpdate = this.budgets.find(bud => bud.name === category);

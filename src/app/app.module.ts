@@ -30,6 +30,7 @@ import {MatFormFieldModule} from "@angular/material/form-field";
 import localeDe from "@angular/common/locales/de";
 import {MatTableModule} from "@angular/material/table";
 import {MatButtonToggleModule} from "@angular/material/button-toggle";
+import {MatTooltip} from "@angular/material/tooltip";
 
 registerLocaleData(localeDe, 'de-DE');
 
@@ -66,7 +67,8 @@ registerLocaleData(localeDe, 'de-DE');
     MatNativeDateModule,
     MatIconModule,
     MatTableModule,
-    MatButtonToggleModule
+    MatButtonToggleModule,
+    MatTooltip
   ],
   providers: [
     {provide: MAT_DATE_LOCALE, useValue: 'de'},
