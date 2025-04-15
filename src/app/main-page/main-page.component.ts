@@ -2,6 +2,9 @@ import { Component } from '@angular/core';
 import {FormBuilder, FormGroup, Validators} from "@angular/forms";
 import {Chart, ChartConfiguration, registerables} from "chart.js/auto";
 import sanitizeHtml from 'sanitize-html';
+import { v4 as uuidv4 } from 'uuid'
+import {MatDialog} from "@angular/material/dialog";
+import {AddGoalDialogComponent} from "../add-goal-dialog/add-goal-dialog.component";
 
 Chart.register(...registerables)
 
@@ -13,6 +16,16 @@ interface Transaction {
   description?: string
 }
 
+interface SavingGoal {
+  id: string;
+  title: string;
+  targetAmount: number;
+  currentAmount: number;
+  deadline?: Date;
+  category?: string;
+  notes?: string;
+}
+
 @Component({
   selector: 'app-main-page',
   standalone: false,
@@ -20,7 +33,7 @@ interface Transaction {
   styleUrl: './main-page.component.css'
 })
 export class MainPageComponent {
-  tabs = ['Categories & Budgets', 'Transactions'];
+  tabs = ['Categories & Budgets', 'Transactions', 'Saving Goals'];
   activeTab = this.tabs[0];
 
   categoryOptions = ['Miete', 'Strom & Wasser', 'Internet & Handy', 'Lebensmittel', 'Haushalt', 'Transport / Benzin',
@@ -55,7 +68,28 @@ export class MainPageComponent {
     Spenden: '#4BC0C0'
   };
 
-  constructor(private fb: FormBuilder) {
+  savingGoals: SavingGoal[] = [
+    {
+      id: uuidv4(),
+      title: 'Vacation Fund',
+      targetAmount: 2000,
+      currentAmount: 450,
+      deadline: new Date('2025-12-01'),
+    },
+    {
+      id: uuidv4(),
+      title: 'New Laptop',
+      targetAmount: 1200,
+      currentAmount: 800,
+    }
+  ];
+
+  // goal!: SavingGoal;
+
+  constructor(
+    private fb: FormBuilder,
+    private dialog: MatDialog
+  ) {
     this.transactionForm = this.fb.group({
       value: [''],
       category: [''],
@@ -255,5 +289,65 @@ export class MainPageComponent {
       color += letters[Math.floor(Math.random() * 16)];
     }
     return color;
+  }
+
+  getGoalProgress(goal: SavingGoal): number {
+    return Math.min((goal.currentAmount / goal.targetAmount) * 100, 100);
+  }
+  getGoalProgressPercentage(goal: SavingGoal): string {
+    return Math.min((goal.currentAmount / goal.targetAmount) * 100, 100).toLocaleString('de-DE', {
+      maximumFractionDigits: 2,
+    });
+  }
+
+  onAddGoal() {
+    const dialogRef = this.dialog.open(AddGoalDialogComponent, {
+      width: '350px'
+    });
+
+    dialogRef.afterClosed().subscribe(result => {
+      if (result) {
+        this.savingGoals.push({
+          id: uuidv4(),
+          title: result.title,
+          targetAmount: result.targetAmount,
+          currentAmount: 0,
+          deadline: result.deadline
+        });
+      }
+    });
+  }
+
+  onEditGoal(goal: SavingGoal) {
+    const dialogRef = this.dialog.open(AddGoalDialogComponent, {
+      width: '350px',
+      data: { ...goal }
+    });
+
+    dialogRef.afterClosed().subscribe(result => {
+      if (result) {
+        const index = this.savingGoals.findIndex(g => g.id === goal.id);
+        if (index !== -1) {
+          this.savingGoals[index] = {
+            ...this.savingGoals[index],
+            title: result.title,
+            targetAmount: result.targetAmount,
+            deadline: result.deadline
+          };
+        }
+      }
+    });
+  }
+
+  onDeleteGoal(goal: SavingGoal) {
+    this.savingGoals = this.savingGoals.filter(g => g.id !== goal.id);
+  }
+
+  onDeposit(goal: SavingGoal) {
+    console.log('Deposit into:', goal.title);
+  }
+
+  onWithdraw(goal: SavingGoal) {
+    console.log('Withdraw from:', goal.title);
   }
 }

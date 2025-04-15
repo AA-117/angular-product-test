@@ -134,3 +134,78 @@ th {
   overflow: hidden;
   text-overflow: ellipsis;
 }
+
+.saving-goals-section {
+  margin-top: 2rem;
+}
+
+.saving-goals-section .header-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 1rem;
+}
+
+.saving-goals-section .header-row h2 {
+  font-size: 1.5rem;
+  font-weight: bold;
+  margin: 0;
+}
+
+.saving-goals-section .goal-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+  gap: 16px;
+}
+
+.saving-goals-section .goal-card {
+  padding: 16px;
+}
+
+.saving-goals-section .goal-card .goal-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+}
+
+.saving-goals-section .goal-card h3 {
+  margin: 0;
+  font-size: 1.2rem;
+  font-weight: 600;
+}
+
+.saving-goals-section .goal-amount {
+  font-size: 0.9rem;
+  color: #666;
+}
+
+.saving-goals-section .goal-deadline {
+  font-size: 0.8rem;
+  color: #999;
+}
+
+.saving-goals-section .goal-progress {
+  margin: 8px 0;
+  height: 10px;
+  border-radius: 10px;
+}
+
+.saving-goals-section .progress-label {
+  font-size: 0.9rem;
+  font-weight: 500;
+  margin-bottom: 4px;
+  color: #555;
+}
+
+.saving-goals-section .goal-actions {
+  display: flex;
+  justify-content: space-between;
+}
+
+.sm-button {
+  margin-left: 5px;
+}
+
+.sm-button mat-icon {
+  vertical-align: unset;
+}

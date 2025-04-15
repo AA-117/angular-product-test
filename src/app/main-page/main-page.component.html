@@ -149,4 +149,46 @@
       <canvas id="transactionChart"></canvas>
     </div>
   </div>
+
+  <div class="content saving-goals-section" *ngIf="activeTab === 'Saving Goals'">
+    <div class="header-row">
+      <h2>Manage Your Saving Goals</h2>
+      <button mat-flat-button color="primary" (click)="onAddGoal()">Add Goal</button>
+    </div>
+
+    <div class="goal-grid">
+      <mat-card *ngFor="let goal of savingGoals" class="goal-card">
+        <div class="goal-header">
+          <div>
+            <h3>{{ goal.title }}</h3>
+            <p class="goal-amount">{{ goal.currentAmount | currency }} / {{ goal.targetAmount | currency }}</p>
+            <p *ngIf="goal.deadline" class="goal-deadline">
+              By {{ goal.deadline | date: 'dd.MM.yyyy':'':'de-DE' }}
+            </p>
+          </div>
+          <div>
+            <button mat-icon-button (click)="onEditGoal(goal)" aria-label="edit goal" class="sm-button">
+              <mat-icon>edit</mat-icon>
+            </button>
+            <button mat-icon-button (click)="onDeleteGoal(goal)" aria-label="delete goal" class="sm-button">
+              <mat-icon>delete</mat-icon>
+            </button>
+          </div>
+        </div>
+        <div class="progress-label">
+          {{ getGoalProgressPercentage(goal) }}%
+        </div>
+        <mat-progress-bar
+          class="goal-progress"
+          mode="determinate"
+          [value]="getGoalProgress(goal)"
+        ></mat-progress-bar>
+
+        <div class="goal-actions">
+          <button mat-raised-button color="primary" (click)="onDeposit(goal)">Deposit</button>
+          <button mat-raised-button color="accent" (click)="onWithdraw(goal)">Withdraw</button>
+        </div>
+      </mat-card>
+    </div>
+  </div>
 </div>

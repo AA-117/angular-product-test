@@ -31,6 +31,9 @@ import localeDe from "@angular/common/locales/de";
 import {MatTableModule} from "@angular/material/table";
 import {MatButtonToggleModule} from "@angular/material/button-toggle";
 import {MatTooltip} from "@angular/material/tooltip";
+import {MatProgressBar} from "@angular/material/progress-bar";
+import {AddGoalDialogComponent} from "./add-goal-dialog/add-goal-dialog.component";
+import {MatDialogActions, MatDialogContent, MatDialogModule} from "@angular/material/dialog";
 
 registerLocaleData(localeDe, 'de-DE');
 
@@ -42,7 +45,8 @@ registerLocaleData(localeDe, 'de-DE');
     MaterialPageComponent,
     OpenaiPageComponent,
     LoggingToolPageComponent,
-    NeobankDashboardComponent
+    NeobankDashboardComponent,
+    AddGoalDialogComponent
   ],
   imports: [
     BrowserModule,
@@ -68,7 +72,11 @@ registerLocaleData(localeDe, 'de-DE');
     MatIconModule,
     MatTableModule,
     MatButtonToggleModule,
-    MatTooltip
+    MatTooltip,
+    MatProgressBar,
+    MatDialogModule,
+    MatDialogContent,
+    MatDialogActions
   ],
   providers: [
     {provide: MAT_DATE_LOCALE, useValue: 'de'},
