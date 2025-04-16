@@ -9,6 +9,7 @@ import {AddGoalDialogComponent} from "../add-goal-dialog/add-goal-dialog.compone
 Chart.register(...registerables)
 
 interface Transaction {
+  id: string,
   category: string,
   amount: number,
   date: string,
@@ -21,9 +22,11 @@ interface SavingGoal {
   title: string;
   targetAmount: number;
   currentAmount: number;
+  created: Date,
   deadline?: Date;
   category?: string;
   notes?: string;
+  index: number;
 }
 
 @Component({
@@ -74,13 +77,17 @@ export class MainPageComponent {
       title: 'Vacation Fund',
       targetAmount: 2000,
       currentAmount: 450,
+      created: new Date('2025-01-10'),
       deadline: new Date('2025-12-01'),
+      index: 0
     },
     {
       id: uuidv4(),
       title: 'New Laptop',
       targetAmount: 1200,
       currentAmount: 800,
+      created: new Date('2025-03-01'),
+      index: 1
     }
   ];
 
@@ -108,6 +115,7 @@ export class MainPageComponent {
     this.categoryForm = this.fb.group({
       name: ['']
     });
+    this.updateCategoryOptions();
   }
 
   switchTab(tab: string): void {
@@ -154,13 +162,14 @@ export class MainPageComponent {
 
   onAddTransaction(): void {
     const { type, value, category, date, description } = this.transactionForm.value;
+    const transId = uuidv4().toString();
     const amount = parseFloat(value);
     const formatDate = new Date(date).toLocaleDateString('de-DE');
     const desc = description!== null ? sanitizeHtml(description, {
       allowedTags: [],
       allowedAttributes: {}
     }) : '';
-    const newObj = {category: category, amount: amount, date: formatDate, type: type, description: desc} as Transaction;
+    const newObj = {id: transId, category: category, amount: amount, date: formatDate, type: type, description: desc} as Transaction;
     if(type === 'output'){
       if (!isNaN(amount) && category && date) {
         const budgetToUpdate = this.budgets.find(bud => bud.name === category);
@@ -172,6 +181,7 @@ export class MainPageComponent {
             budgetToUpdate.remainBudget -= amount;
             this.transactions.push(newObj);
             this.remainAmount = this.budgets.reduce((sum, bud) => sum + Math.max(bud.remainBudget, 0), 0);
+            console.log(newObj);
           } else {
             alert("Transaction exceeds the allowed extra limit and therefore is aborted.");
           }
@@ -304,7 +314,7 @@ export class MainPageComponent {
     const dialogRef = this.dialog.open(AddGoalDialogComponent, {
       width: '350px'
     });
-
+    const i = (this.savingGoals.length === 0) ? -1 : Math.max(...this.savingGoals.map(goal => goal.index));
     dialogRef.afterClosed().subscribe(result => {
       if (result) {
         this.savingGoals.push({
@@ -312,8 +322,11 @@ export class MainPageComponent {
           title: result.title,
           targetAmount: result.targetAmount,
           currentAmount: 0,
-          deadline: result.deadline
+          created: new Date(),
+          deadline: result.deadline,
+          index: i+1
         });
+        this.updateCategoryOptions();
       }
     });
   }
@@ -341,6 +354,12 @@ export class MainPageComponent {
 
   onDeleteGoal(goal: SavingGoal) {
     this.savingGoals = this.savingGoals.filter(g => g.id !== goal.id);
+    this.savingGoals
+      .sort((a, b) => a.index - b.index)
+      .forEach((goal, i ) => {
+        goal.index = i;
+      })
+    this.updateCategoryOptions()
   }
 
   onDeposit(goal: SavingGoal) {
@@ -349,5 +368,13 @@ export class MainPageComponent {
 
   onWithdraw(goal: SavingGoal) {
     console.log('Withdraw from:', goal.title);
+  }
+
+  updateCategoryOptions() {
+    const baseCategories = this.categoryOptions.filter(category => !category.startsWith('Goal-'));
+    const goalCategories = this.savingGoals.map(
+      goal => `Goal-${goal.index + 1}-${goal.title}`
+    )
+    this.categoryOptions = [...baseCategories, ...goalCategories].sort((a,b) => a.localeCompare(b));;
   }
 }

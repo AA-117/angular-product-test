@@ -160,8 +160,9 @@
       <mat-card *ngFor="let goal of savingGoals" class="goal-card">
         <div class="goal-header">
           <div>
-            <h3>{{ goal.title }}</h3>
+            <h3>{{goal.index + 1}}. {{ goal.title }}</h3>
             <p class="goal-amount">{{ goal.currentAmount | currency }} / {{ goal.targetAmount | currency }}</p>
+            <p> created: {{goal.created | date: 'dd.MM.yyyy' : '':'de-DE'}}</p>
             <p *ngIf="goal.deadline" class="goal-deadline">
               By {{ goal.deadline | date: 'dd.MM.yyyy':'':'de-DE' }}
             </p>
