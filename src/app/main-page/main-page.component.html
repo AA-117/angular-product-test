@@ -16,7 +16,7 @@
       <mat-form-field appearance="outline" class="w-full my-2">
         <mat-label>Select Category</mat-label>
         <mat-select formControlName="name">
-          <mat-option *ngFor="let c of categoryOptions" [value]="c">
+          <mat-option *ngFor="let c of purifiedCategoryOptions" [value]="c">
             {{ c }}
           </mat-option>
         </mat-select>
@@ -36,18 +36,19 @@
       </mat-form-field>
       <mat-form-field appearance="outline" class="w-full my-2">
         <mat-label>Budget Amount</mat-label>
-        <input matInput id="budget" type="number" formControlName="budget" />
+        <input matInput id="budget" type="number" formControlName="budget" min="0"/>
       </mat-form-field>
       <mat-slide-toggle formControlName="allowExtra" class="toggle">
         Allow overspent?
       </mat-slide-toggle>
       <mat-form-field *ngIf="budgetForm.get('allowExtra')?.value" appearance="outline" class="w-full my-2">
         <mat-label>Overspent Allowed: (in percentage)</mat-label>
-        <input matInput id="extraAllowed" type="number" formControlName="extraAllowed" />
+        <input matInput id="extraAllowed" type="number" formControlName="extraAllowed" min="0"/>
       </mat-form-field>
       <button mat-raised-button color="primary" type="submit">Set Budget</button>
     </form>
     <br>
+    <p>Current activated Categories: </p>
     <table mat-table [dataSource]="budgets" class="mat-elevation-z8">
       <ng-container matColumnDef="category">
         <th mat-header-cell *matHeaderCellDef>Category</th>
@@ -55,17 +56,17 @@
       </ng-container>
       <ng-container matColumnDef="planedBudget">
         <th mat-header-cell *matHeaderCellDef>Budget Planed</th>
-        <td mat-cell *matCellDef="let budget">{{ budget.presetBudget | number: '1.2-2' }}
-          {{budget.allowExtra? '(+ ' + (budget.presetBudget * budget.extraAllowed / 100) + ')' : ''}} €</td>
+        <td mat-cell *matCellDef="let budget">{{ budget.presetBudget >= 0 ? (budget.presetBudget | number: '1.2-2') : '-'}}
+          {{budget.allowExtra? '(+ ' + (budget.presetBudget * budget.extraAllowed / 100) + ')  €' : ''}}</td>
       </ng-container>
       <ng-container matColumnDef="remainBudget">
         <th mat-header-cell *matHeaderCellDef>Budget Left</th>
-        <td mat-cell *matCellDef="let budget">{{ budget.remainBudget }} €</td>
+        <td mat-cell *matCellDef="let budget">{{ (budget.remainBudget >= 0) ? budget.remainBudget + ' €': '-' }}</td>
       </ng-container>
       <ng-container matColumnDef="action">
         <th mat-header-cell *matHeaderCellDef>Action</th>
         <td mat-cell *matCellDef="let budget">
-          <button mat-raised-button color="warn" (click)="onRemoveCategory(budget.name)">
+          <button *ngIf="budget.presetBudget >= 0" mat-raised-button color="warn" (click)="onRemoveCategory(budget.name)">
             <mat-icon>delete</mat-icon>Remove
           </button>
         </td>
@@ -79,7 +80,9 @@
     <h2>Transaction Management</h2>
     <ul>
       <li *ngFor="let budget of budgets">
+        <p *ngIf="budget.presetBudget >= 0">
         {{ budget.name }} Budget left: {{ budget.remainBudget >= 0 ? (budget.remainBudget | number: '1.2-2') : 0 }} of {{ budget.presetBudget | number: '1.2-2' }} € {{ budget.allowExtra ? '(Total ' + budget.name  + ' Budget up to ' + (budget.presetBudget * (1 + budget.extraAllowed / 100) | number: '1.2-2') + ' € allowed)' : '' }}
+        </p>
       </li>
     </ul>
     <h3>Total Budgets: {{ totalAmount | number: '1.2-2' }} €</h3>

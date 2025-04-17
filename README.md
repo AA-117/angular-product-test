@@ -27,9 +27,19 @@ Eine Cash-Stuffing Applikation (Test DEMO) zur Verwaltung von Kategorien, Budget
 - Enthält Basis-Kategorien (z.B. „Freizeit“) + dynamisch generierte Sparziele
 - Sparzielkategorien folgen dem Schema: `Goal-<Index>-<Titel>` (z.B. `Goal-2-Urlaub`)
 - Kategorie-Dropdowns werden bei jeder Änderung neu generiert
+- Eine Sparzielkategorie kann im Bereich "Kategorieverwaltung" weder hinzugefügt noch gelöscht werden, und es kann kein Budget dafür definiert werden.
+- Die Verwaltung eines Saving Goals kann ausschließlich im Bereich „Saving Goal Management“ erfolgen.
 
 ## Datenmodell
 ```ts
+interface Budget {
+  name: string,
+  presetBudget: number,
+  remainBudget: number,
+  allowExtra: boolean,
+  extraAllowed: number
+}
+
 interface Transaction {
   id: string,
   category: string,     // kann auch ein Sparziel sein

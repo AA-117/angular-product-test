@@ -29,6 +29,14 @@ interface SavingGoal {
   index: number;
 }
 
+interface Budget {
+  name: string,
+  presetBudget: number,
+  remainBudget: number,
+  allowExtra: boolean,
+  extraAllowed: number
+}
+
 @Component({
   selector: 'app-main-page',
   standalone: false,
@@ -44,18 +52,20 @@ export class MainPageComponent {
   'Geschenke', 'Gesundheit', 'Fitness / Sport', 'Beauty / Pflege', 'Haustiere', 'Kinder / Schule', 'Abo', 'Spenden', 'Urlaub / Reisen',
   'Auto', 'Sonstiges'].sort((a,b) => a.localeCompare(b));
 
+  purifiedCategoryOptions: string[] = [];
+
   displayedColumns = ['category', 'planedBudget', 'remainBudget', 'action'];
 
 
-  budgets = [
+  budgets: Budget[] = [
     { name: 'Lebensmittel', presetBudget: 100, remainBudget: 100, allowExtra: false, extraAllowed: 10},
     { name: 'Haushalt', presetBudget: 100, remainBudget: 100, allowExtra: false, extraAllowed: 10},
     { name: 'Gesundheit', presetBudget: 100, remainBudget: 100, allowExtra: false, extraAllowed: 10},
     { name: 'Spenden', presetBudget: 100, remainBudget: 100, allowExtra: true, extraAllowed: 10}
   ];
 
-  totalAmount = this.budgets.reduce((sum1, budget) => sum1 + budget.presetBudget, 0);
-  remainAmount = this.budgets.reduce((sum2, budget) => sum2 + budget.remainBudget, 0);
+  totalAmount = this.budgets.filter(bud => !bud.name.startsWith('Goal-')).reduce((sum1, budget) => sum1 + budget.presetBudget, 0);
+  remainAmount = this.budgets.filter(bud => !bud.name.startsWith('Goal-')).reduce((sum2, budget) => sum2 + budget.remainBudget, 0);
 
   transactionForm: FormGroup;
   budgetForm: FormGroup;
@@ -116,6 +126,7 @@ export class MainPageComponent {
       name: ['']
     });
     this.updateCategoryOptions();
+    this.updateBudgetList();
   }
 
   switchTab(tab: string): void {
@@ -123,8 +134,8 @@ export class MainPageComponent {
       setTimeout(() => this.renderChart('doughnut'), 0);
     }
     this.activeTab = tab;
-    this.totalAmount = this.budgets.reduce((sum1, bud) => sum1 + bud.presetBudget, 0);
-    this.remainAmount = this.budgets.reduce((sum2, bud) => sum2 + bud.remainBudget, 0);
+    this.totalAmount = this.budgets.filter(bud => !bud.name.startsWith('Goal-')).reduce((sum1, bud) => sum1 + bud.presetBudget, 0);
+    this.remainAmount = this.budgets.filter(bud => !bud.name.startsWith('Goal-')).reduce((sum2, bud) => sum2 + bud.remainBudget, 0);
   }
 
   onAddCategory(): void {
@@ -150,14 +161,21 @@ export class MainPageComponent {
 
   onSetBudget(): void {
     const { category, budget, allowExtra, extraAllowed } = this.budgetForm.value;
-    const budgetToUpdate = this.budgets.find(b => b.name === category);
-    if (budgetToUpdate) {
-      budgetToUpdate.presetBudget = budget ? parseFloat(budget) : 0;
-      budgetToUpdate.remainBudget = budgetToUpdate.presetBudget;
-      budgetToUpdate.allowExtra = allowExtra;
-      budgetToUpdate.extraAllowed = allowExtra ? (extraAllowed ? extraAllowed: 0) : 0;
+    if(!category.startsWith('Goal-')) {
+      if (budget >= 0) {
+        const budgetToUpdate = this.budgets.find(b => b.name === category);
+        if (budgetToUpdate) {
+          budgetToUpdate.presetBudget = budget ? parseFloat(budget) : 0;
+          budgetToUpdate.remainBudget = budgetToUpdate.presetBudget;
+          budgetToUpdate.allowExtra = allowExtra;
+          budgetToUpdate.extraAllowed = allowExtra ? (extraAllowed ? extraAllowed : 0) : 0;
+        }
+        this.budgetForm.reset();
+      }
+    } else {
+      alert("You can not set budgets of your saving goals here.");
+      this.budgetForm.reset();
     }
-    this.budgetForm.reset();
   }
 
   onAddTransaction(): void {
@@ -201,7 +219,7 @@ export class MainPageComponent {
   onDeleteTransaction(index: number): void {
     const transaction = this.transactions[index];
     const transactionToUpdate = this.budgets.find(bud => bud.name === transaction.category);
-    if (transactionToUpdate && transaction.type === 'output') {
+    if (transactionToUpdate && transaction.type === 'output' && (transactionToUpdate.presetBudget >= 0) && (transactionToUpdate.remainBudget >=0) && (transactionToUpdate.extraAllowed >=0)) {
       transactionToUpdate.remainBudget += transaction.amount;
       this.remainAmount = this.budgets.reduce((sum, bud) => sum + bud.remainBudget, 0);
       setTimeout(() => this.renderChart('doughnut'), 0);
@@ -327,6 +345,7 @@ export class MainPageComponent {
           index: i+1
         });
         this.updateCategoryOptions();
+        this.updateBudgetList()
       }
     });
   }
@@ -359,7 +378,8 @@ export class MainPageComponent {
       .forEach((goal, i ) => {
         goal.index = i;
       })
-    this.updateCategoryOptions()
+    this.updateCategoryOptions();
+    this.updateBudgetList();
   }
 
   onDeposit(goal: SavingGoal) {
@@ -375,6 +395,22 @@ export class MainPageComponent {
     const goalCategories = this.savingGoals.map(
       goal => `Goal-${goal.index + 1}-${goal.title}`
     )
-    this.categoryOptions = [...baseCategories, ...goalCategories].sort((a,b) => a.localeCompare(b));;
+    this.categoryOptions = [...baseCategories, ...goalCategories].sort((a,b) => a.localeCompare(b));
+    this.purifiedCategoryOptions = this.categoryOptions.filter(cat => !cat.startsWith('Goal-'));
+  }
+
+  updateBudgetList() {
+    const baseBudgets = this.budgets.filter(budget => !budget.name.startsWith('Goal-'));
+    const goalBudgets = this.savingGoals.map(
+      goal => ({
+        name: `Goal-${goal.index + 1}-${goal.title}`,
+        presetBudget: -1,
+        remainBudget: -1,
+        allowExtra: false,
+        extraAllowed: 0
+      })
+
+    )
+    this.budgets = [...baseBudgets, ...goalBudgets];
   }
 }
