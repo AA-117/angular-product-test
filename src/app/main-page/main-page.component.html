@@ -16,7 +16,7 @@
       <mat-form-field appearance="outline" class="w-full my-2">
         <mat-label>Select Category</mat-label>
         <mat-select formControlName="name">
-          <mat-option *ngFor="let c of purifiedCategoryOptions" [value]="c">
+          <mat-option *ngFor="let c of categoryOptions" [value]="c">
             {{ c }}
           </mat-option>
         </mat-select>
@@ -49,7 +49,7 @@
     </form>
     <br>
     <p>Current activated Categories: </p>
-    <table mat-table [dataSource]="budgets" class="mat-elevation-z8">
+    <table mat-table [dataSource]="fullBudgets" class="mat-elevation-z8">
       <ng-container matColumnDef="category">
         <th mat-header-cell *matHeaderCellDef>Category</th>
         <td mat-cell *matCellDef="let budget">{{ budget.name }}</td>
@@ -89,8 +89,8 @@
     <h3>Remain Budgets: {{ remainAmount | number: '1.2-2' }} €</h3>
     <form [formGroup]="transactionForm" (ngSubmit)="onAddTransaction()">
       <mat-button-toggle-group formControlName="type" appearance="standard" class="my-2 toggle-group">
-        <mat-button-toggle value="output">Output</mat-button-toggle>
-        <mat-button-toggle value="input">Input</mat-button-toggle>
+        <mat-button-toggle value="output">Withdraw</mat-button-toggle>
+        <mat-button-toggle value="input">Deposit</mat-button-toggle>
       </mat-button-toggle-group>
       <mat-form-field appearance="outline" class="w-full my-2">
         <mat-label>Transaction Value:</mat-label>
@@ -99,7 +99,7 @@
       <mat-form-field appearance="outline" class="w-full my-2">
         <mat-label>Category:</mat-label>
         <mat-select formControlName="category">
-          <mat-option *ngFor="let budget of budgets" [value]="budget.name">
+          <mat-option *ngFor="let budget of fullBudgets" [value]="budget.name">
             {{ budget.name }}
           </mat-option>
         </mat-select>

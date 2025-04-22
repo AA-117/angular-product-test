@@ -52,7 +52,8 @@ export class MainPageComponent {
   'Geschenke', 'Gesundheit', 'Fitness / Sport', 'Beauty / Pflege', 'Haustiere', 'Kinder / Schule', 'Abo', 'Spenden', 'Urlaub / Reisen',
   'Auto', 'Sonstiges'].sort((a,b) => a.localeCompare(b));
 
-  purifiedCategoryOptions: string[] = [];
+  goalCategoryOptions: string[] = [];
+  fullCategoryOptions: string[] = [];
 
   displayedColumns = ['category', 'planedBudget', 'remainBudget', 'action'];
 
@@ -63,9 +64,11 @@ export class MainPageComponent {
     { name: 'Gesundheit', presetBudget: 100, remainBudget: 100, allowExtra: false, extraAllowed: 10},
     { name: 'Spenden', presetBudget: 100, remainBudget: 100, allowExtra: true, extraAllowed: 10}
   ];
+  goalBudgets: Budget[] = [];
+  fullBudgets: Budget[] = [];
 
-  totalAmount = this.budgets.filter(bud => !bud.name.startsWith('Goal-')).reduce((sum1, budget) => sum1 + budget.presetBudget, 0);
-  remainAmount = this.budgets.filter(bud => !bud.name.startsWith('Goal-')).reduce((sum2, budget) => sum2 + budget.remainBudget, 0);
+  totalAmount = this.budgets.reduce((sum1, budget) => sum1 + budget.presetBudget, 0);
+  remainAmount = this.budgets.reduce((sum2, budget) => sum2 + budget.remainBudget, 0);
 
   transactionForm: FormGroup;
   budgetForm: FormGroup;
@@ -134,8 +137,8 @@ export class MainPageComponent {
       setTimeout(() => this.renderChart('doughnut'), 0);
     }
     this.activeTab = tab;
-    this.totalAmount = this.budgets.filter(bud => !bud.name.startsWith('Goal-')).reduce((sum1, bud) => sum1 + bud.presetBudget, 0);
-    this.remainAmount = this.budgets.filter(bud => !bud.name.startsWith('Goal-')).reduce((sum2, bud) => sum2 + bud.remainBudget, 0);
+    this.totalAmount = this.budgets.reduce((sum1, bud) => sum1 + bud.presetBudget, 0);
+    this.remainAmount = this.budgets.reduce((sum2, bud) => sum2 + bud.remainBudget, 0);
   }
 
   onAddCategory(): void {
@@ -161,7 +164,6 @@ export class MainPageComponent {
 
   onSetBudget(): void {
     const { category, budget, allowExtra, extraAllowed } = this.budgetForm.value;
-    if(!category.startsWith('Goal-')) {
       if (budget >= 0) {
         const budgetToUpdate = this.budgets.find(b => b.name === category);
         if (budgetToUpdate) {
@@ -172,59 +174,100 @@ export class MainPageComponent {
         }
         this.budgetForm.reset();
       }
-    } else {
-      alert("You can not set budgets of your saving goals here.");
-      this.budgetForm.reset();
-    }
   }
 
   onAddTransaction(): void {
     const { type, value, category, date, description } = this.transactionForm.value;
-    const transId = uuidv4().toString();
     const amount = parseFloat(value);
+    if (!category || isNaN(amount) || !date) return;
+
+    const transId = uuidv4().toString();
     const formatDate = new Date(date).toLocaleDateString('de-DE');
-    const desc = description!== null ? sanitizeHtml(description, {
+    const desc = description ? sanitizeHtml(description, {
       allowedTags: [],
       allowedAttributes: {}
     }) : '';
-    const newObj = {id: transId, category: category, amount: amount, date: formatDate, type: type, description: desc} as Transaction;
-    if(type === 'output'){
-      if (!isNaN(amount) && category && date) {
-        const budgetToUpdate = this.budgets.find(bud => bud.name === category);
-        if (budgetToUpdate) {
-          if (!budgetToUpdate.allowExtra) {
-            budgetToUpdate.extraAllowed = 0;
-          }
-          if (budgetToUpdate.remainBudget - amount + budgetToUpdate.presetBudget * budgetToUpdate.extraAllowed / 100 >= 0) {
-            budgetToUpdate.remainBudget -= amount;
-            this.transactions.push(newObj);
-            this.remainAmount = this.budgets.reduce((sum, bud) => sum + Math.max(bud.remainBudget, 0), 0);
-            console.log(newObj);
-          } else {
-            alert("Transaction exceeds the allowed extra limit and therefore is aborted.");
-          }
-        }
-      }
-      if (this.transactions.length > 0) {
-        setTimeout(() => this.renderChart('doughnut'), 0);
-      }
+    const newObj: Transaction = {id: transId, category: category, amount: amount, date: formatDate, type: type, description: desc};
+    const isGoalTransaction = category.startsWith('Goal-');
+    if (isGoalTransaction) {
+      this.handleGoalTransaction(newObj);
     } else {
-      if(!isNaN(amount) && category && date) {
-        this.transactions.push(newObj);
-      }
+      this.handleNormalTransaction(newObj);
+    }
+    if (this.transactions.length > 0) {
+      setTimeout(() => this.renderChart('doughnut'), 0);
     }
     this.transactionForm.reset({type: 'output'});
   }
 
+  private handleGoalTransaction(obj: Transaction){
+    const goalTitle = obj.category.split('-').slice(2).join('-');
+    const goal = this.savingGoals.find(g => g.title === goalTitle);
+
+    if(!goal) return;
+    goal.currentAmount += (obj.type === 'output' ? obj.amount : -obj.amount);
+    this.transactions.push(obj);
+  }
+
+  private handleNormalTransaction(obj: Transaction) {
+    const budgetToUpdate = this.fullBudgets.find(b => b.name === obj.category);
+    if (!budgetToUpdate) return;
+
+    budgetToUpdate.extraAllowed = budgetToUpdate.allowExtra ? budgetToUpdate.extraAllowed : 0;
+    const allowedOverspend = (budgetToUpdate.presetBudget * budgetToUpdate.extraAllowed) / 100;
+
+    if (obj.type === 'output') {
+      const isWithinLimit = (budgetToUpdate.remainBudget - obj.amount + allowedOverspend) >= 0;
+      if (!isWithinLimit) {
+        alert("Transaction exceeds the allowed extra limit and therefore is aborted.");
+        return;
+      }
+      budgetToUpdate.remainBudget -= obj.amount;
+      this.remainAmount = this.budgets.reduce((sum, bud) => sum + Math.max(bud.remainBudget, 0), 0);
+    } else {
+      budgetToUpdate.presetBudget += obj.amount;
+      budgetToUpdate.remainBudget += obj.amount;
+      this.totalAmount += obj.amount;
+      this.remainAmount += obj.amount;
+    }
+    this.transactions.push(obj);
+  }
+
   onDeleteTransaction(index: number): void {
     const transaction = this.transactions[index];
-    const transactionToUpdate = this.budgets.find(bud => bud.name === transaction.category);
-    if (transactionToUpdate && transaction.type === 'output' && (transactionToUpdate.presetBudget >= 0) && (transactionToUpdate.remainBudget >=0) && (transactionToUpdate.extraAllowed >=0)) {
-      transactionToUpdate.remainBudget += transaction.amount;
-      this.remainAmount = this.budgets.reduce((sum, bud) => sum + bud.remainBudget, 0);
-      setTimeout(() => this.renderChart('doughnut'), 0);
+    if (!transaction) return;
+
+    const isGoalTransaction = transaction.category.startsWith('Goal-');
+    if (isGoalTransaction) {
+      this.revertGoalTransaction(transaction);
+    } else {
+      this.revertNormalTransaction(transaction);
     }
+
     this.transactions.splice(index, 1);
+    setTimeout(() => this.renderChart('doughnut'), 0);
+  }
+
+  private revertGoalTransaction(tx: Transaction): void {
+    const goalTitle = tx.category.split('-').slice(2).join('-');
+    const goal = this.savingGoals.find(g => g.title === goalTitle);
+    if(!goal) return;
+    goal.currentAmount -= (tx.type ==='output' ? tx.amount : -tx.amount);
+  }
+
+  private revertNormalTransaction(tx: Transaction): void {
+    const budget = this.budgets.find(b => b.name === tx.category);
+    if (!budget) return;
+
+    if (tx.type === 'output') {
+      budget.remainBudget += tx.amount;
+    } else {
+      budget.presetBudget -= tx.amount;
+      budget.remainBudget -= tx.amount;
+      this.totalAmount -= tx.amount;
+    }
+
+    this.remainAmount = this.budgets.reduce((sum, b) => sum + Math.max(b.remainBudget ?? 0, 0), 0);
   }
 
   renderChart(type: string): void {
@@ -391,17 +434,17 @@ export class MainPageComponent {
   }
 
   updateCategoryOptions() {
-    const baseCategories = this.categoryOptions.filter(category => !category.startsWith('Goal-'));
+    const baseCategories = this.goalCategoryOptions.filter(category => !category.startsWith('Goal-'));
     const goalCategories = this.savingGoals.map(
       goal => `Goal-${goal.index + 1}-${goal.title}`
     )
-    this.categoryOptions = [...baseCategories, ...goalCategories].sort((a,b) => a.localeCompare(b));
-    this.purifiedCategoryOptions = this.categoryOptions.filter(cat => !cat.startsWith('Goal-'));
+    this.goalCategoryOptions = [...baseCategories, ...goalCategories].sort((a,b) => a.localeCompare(b));
+    this.fullCategoryOptions = [...this.categoryOptions, ...this.goalCategoryOptions].sort((a, b) =>a.localeCompare(b));
   }
 
   updateBudgetList() {
-    const baseBudgets = this.budgets.filter(budget => !budget.name.startsWith('Goal-'));
-    const goalBudgets = this.savingGoals.map(
+    const baseBudgets = this.goalBudgets.filter(budget => !budget.name.startsWith('Goal-'));
+    const fakedGoalBudgets = this.savingGoals.map(
       goal => ({
         name: `Goal-${goal.index + 1}-${goal.title}`,
         presetBudget: -1,
@@ -409,8 +452,8 @@ export class MainPageComponent {
         allowExtra: false,
         extraAllowed: 0
       })
-
     )
-    this.budgets = [...baseBudgets, ...goalBudgets];
+    this.goalBudgets = [...baseBudgets, ...fakedGoalBudgets];
+    this.fullBudgets = [...this.budgets, ...this.goalBudgets];
   }
 }
