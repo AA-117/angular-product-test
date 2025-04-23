@@ -1,0 +1,26 @@
+<h2 mat-dialog-title>
+  {{ data.type === 'output' ? 'Einzahlen' : 'Auszahlen' }}: {{ data.goal.title }}
+</h2>
+
+<mat-dialog-content class="dialog-content">
+  <div class="goal-progress-info">
+    <p>
+      Aktueller Fortschritt:
+      {{ data.goal.currentAmount }} / {{ data.goal.targetAmount }}€
+      ({{ progress | number:'1.0-2' }}%)
+    </p>
+    <mat-progress-bar [value]="progress" mode="determinate"></mat-progress-bar>
+  </div>
+
+  <div class="spacer"></div>
+
+  <mat-form-field appearance="outline" class="full-width">
+    <mat-label>Betrag (€)</mat-label>
+    <input matInput type="number" [(ngModel)]="amount" min="0" />
+  </mat-form-field>
+</mat-dialog-content>
+
+<mat-dialog-actions align="end">
+  <button mat-button (click)="onCancel()">Abbrechen</button>
+  <button mat-flat-button color="primary" (click)="onConfirm()" [disabled]="!amount || amount <= 0">Bestätigen</button>
+</mat-dialog-actions>

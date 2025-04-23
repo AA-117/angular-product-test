@@ -1,0 +1,23 @@
+.dialog-content {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  padding-top: 8px;
+}
+
+.goal-progress-info p {
+  margin: 0 0 4px 0;
+}
+
+.mat-progress-bar {
+  height: 10px;
+  border-radius: 5px;
+}
+
+.full-width {
+  width: 100%;
+}
+
+.spacer {
+  height: 16px;
+}

@@ -1,41 +1,16 @@
-import { Component } from '@angular/core';
+import {Component} from '@angular/core';
 import {FormBuilder, FormGroup, Validators} from "@angular/forms";
 import {Chart, ChartConfiguration, registerables} from "chart.js/auto";
 import sanitizeHtml from 'sanitize-html';
 import { v4 as uuidv4 } from 'uuid'
 import {MatDialog} from "@angular/material/dialog";
 import {AddGoalDialogComponent} from "../add-goal-dialog/add-goal-dialog.component";
+import {GoalTransactionDialogComponent} from "../goal-transaction-dialog/goal-transaction-dialog.component";
+import {Transaction} from "../../models/transaction.model";
+import {SavingGoal} from "../../models/saving-goal.model";
+import {Budget} from "../../models/budget.model";
 
 Chart.register(...registerables)
-
-interface Transaction {
-  id: string,
-  category: string,
-  amount: number,
-  date: string,
-  type: string,
-  description?: string
-}
-
-interface SavingGoal {
-  id: string;
-  title: string;
-  targetAmount: number;
-  currentAmount: number;
-  created: Date,
-  deadline?: Date;
-  category?: string;
-  notes?: string;
-  index: number;
-}
-
-interface Budget {
-  name: string,
-  presetBudget: number,
-  remainBudget: number,
-  allowExtra: boolean,
-  extraAllowed: number
-}
 
 @Component({
   selector: 'app-main-page',
@@ -206,6 +181,16 @@ export class MainPageComponent {
 
     if(!goal) return;
     goal.currentAmount += (obj.type === 'output' ? obj.amount : -obj.amount);
+    if(goal.currentAmount > goal.targetAmount) {
+      alert("you have transferred more money as planned into the goal " + goal.title);
+      goal.currentAmount -= obj.amount;
+      return;
+    }
+    if(goal.currentAmount < 0) {
+      alert("you are planning to withdraw more money as saved in the goal " + goal.title);
+      goal.currentAmount += obj.amount;
+      return;
+    }
     this.transactions.push(obj);
   }
 
@@ -239,23 +224,26 @@ export class MainPageComponent {
 
     const isGoalTransaction = transaction.category.startsWith('Goal-');
     if (isGoalTransaction) {
-      this.revertGoalTransaction(transaction);
+      this.deleteGoalTransaction(transaction, index);
     } else {
-      this.revertNormalTransaction(transaction);
+      this.deleteNormalTransaction(transaction, index);
     }
-
-    this.transactions.splice(index, 1);
     setTimeout(() => this.renderChart('doughnut'), 0);
   }
 
-  private revertGoalTransaction(tx: Transaction): void {
+  private deleteGoalTransaction(tx: Transaction, index: number): void {
     const goalTitle = tx.category.split('-').slice(2).join('-');
     const goal = this.savingGoals.find(g => g.title === goalTitle);
     if(!goal) return;
     goal.currentAmount -= (tx.type ==='output' ? tx.amount : -tx.amount);
+    if(goal.currentAmount < 0) {
+      alert('The remained amount of the goal ' + goal.title + ' cannot be negative.')
+      return;
+    }
+    this.transactions.splice(index, 1);
   }
 
-  private revertNormalTransaction(tx: Transaction): void {
+  private deleteNormalTransaction(tx: Transaction, index: number): void {
     const budget = this.budgets.find(b => b.name === tx.category);
     if (!budget) return;
 
@@ -268,6 +256,7 @@ export class MainPageComponent {
     }
 
     this.remainAmount = this.budgets.reduce((sum, b) => sum + Math.max(b.remainBudget ?? 0, 0), 0);
+    this.transactions.splice(index, 1);
   }
 
   renderChart(type: string): void {
@@ -276,7 +265,7 @@ export class MainPageComponent {
     const ctx = canvas.getContext('2d');
     if(!ctx) return;
 
-    const categoryTotals = this.budgets.map(bud => {
+    const categoryTotals = this.fullBudgets.map(bud => {
       const total = this.transactions
         .filter(transaction => transaction.category === bud.name && transaction.type === 'output')
         .reduce((sum, transaction) => sum + transaction.amount, 0);
@@ -424,13 +413,27 @@ export class MainPageComponent {
     this.updateCategoryOptions();
     this.updateBudgetList();
   }
+  onGoalTransaction(goal: SavingGoal, type: 'input' | 'output') {
+    const dialogRef = this.dialog.open(GoalTransactionDialogComponent, {
+      width: '400px',
+      data: { goal, type }
+    });
 
-  onDeposit(goal: SavingGoal) {
-    console.log('Deposit into:', goal.title);
-  }
-
-  onWithdraw(goal: SavingGoal) {
-    console.log('Withdraw from:', goal.title);
+    dialogRef.afterClosed().subscribe(amount => {
+      if (amount) {
+        const tx: Transaction = {
+          id: uuidv4(),
+          category: `Goal-${goal.index + 1}-${goal.title}`,
+          amount,
+          type,
+          date: new Date().toLocaleDateString('de-DE'),
+          description: type === 'output' ? 'Einzahlung ins Sparziel ' + goal.title : 'Auszahlung vom Sparziel ' + goal.title
+        };
+        this.transactions.push(tx);
+        goal.currentAmount += (tx.type === 'output' ? tx.amount : -tx.amount);
+        setTimeout(() => this.renderChart('doughnut'), 0);
+      }
+    });
   }
 
   updateCategoryOptions() {

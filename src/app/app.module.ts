@@ -11,7 +11,7 @@ import {FormsModule, ReactiveFormsModule} from "@angular/forms";
 import {MaterialPageComponent} from "./material-page/material-page.component";
 import {OpenaiPageComponent} from "./openai-page/openai-page.component";
 import {LoggingToolPageComponent} from "./logging-tool-page/logging-tool-page.component";
-import {LumberjackLogger, provideLumberjack} from "@ngworker/lumberjack";
+import {provideLumberjack} from "@ngworker/lumberjack";
 import {provideLumberjackHttpDriver, withHttpConfig} from "@ngworker/lumberjack/http-driver";
 import {provideLumberjackConsoleDriver} from "@ngworker/lumberjack/console-driver";
 import {NeobankDashboardComponent} from "./neobank-dashboard/neobank-dashboard.component";
@@ -34,6 +34,7 @@ import {MatTooltip} from "@angular/material/tooltip";
 import {MatProgressBar} from "@angular/material/progress-bar";
 import {AddGoalDialogComponent} from "./add-goal-dialog/add-goal-dialog.component";
 import {MatDialogActions, MatDialogContent, MatDialogModule} from "@angular/material/dialog";
+import {GoalTransactionDialogComponent} from "./goal-transaction-dialog/goal-transaction-dialog.component";
 
 registerLocaleData(localeDe, 'de-DE');
 
@@ -46,7 +47,8 @@ registerLocaleData(localeDe, 'de-DE');
     OpenaiPageComponent,
     LoggingToolPageComponent,
     NeobankDashboardComponent,
-    AddGoalDialogComponent
+    AddGoalDialogComponent,
+    GoalTransactionDialogComponent
   ],
   imports: [
     BrowserModule,

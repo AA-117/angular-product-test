@@ -131,7 +131,7 @@
       <tr *ngFor="let transaction of transactions; let i = index">
         <td>{{ transaction.category }}</td>
         <td>{{ transaction.date}}</td>
-        <td>{{ transaction.type === 'output' ? '-' : '+'}}{{ transaction.amount | number: '1.2-2' }} €</td>
+        <td>{{ transaction.type === 'output' ? '+' : '-'}}{{ transaction.amount | number: '1.2-2' }} €</td>
         <td>
           <span matTooltip="{{transaction.description}}" class="description-cell">
             {{ transaction.description ||'-'}}
@@ -189,8 +189,8 @@
         ></mat-progress-bar>
 
         <div class="goal-actions">
-          <button mat-raised-button color="primary" (click)="onDeposit(goal)">Deposit</button>
-          <button mat-raised-button color="accent" (click)="onWithdraw(goal)">Withdraw</button>
+          <button mat-raised-button color="primary" (click)="onGoalTransaction(goal, 'output')">Deposit</button>
+          <button mat-raised-button color="accent" (click)="onGoalTransaction(goal, 'input')">Withdraw</button>
         </div>
       </mat-card>
     </div>
