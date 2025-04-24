@@ -9,6 +9,7 @@ import {GoalTransactionDialogComponent} from "../goal-transaction-dialog/goal-tr
 import {Transaction} from "../../models/transaction.model";
 import {SavingGoal} from "../../models/saving-goal.model";
 import {Budget} from "../../models/budget.model";
+import {of} from "rxjs";
 
 Chart.register(...registerables)
 
@@ -32,6 +33,9 @@ export class MainPageComponent {
 
   displayedColumns = ['category', 'planedBudget', 'remainBudget', 'action'];
 
+  // simulate the total stand of user's bank account
+  totalStand$ = of(3000);
+  currentStand:number = 0;
 
   budgets: Budget[] = [
     { name: 'Lebensmittel', presetBudget: 100, remainBudget: 100, allowExtra: false, extraAllowed: 10},
@@ -105,6 +109,9 @@ export class MainPageComponent {
     });
     this.updateCategoryOptions();
     this.updateBudgetList();
+    this.totalStand$.subscribe(value => {
+      this.currentStand = value;
+    })
   }
 
   switchTab(tab: string): void {
@@ -155,7 +162,6 @@ export class MainPageComponent {
     const { type, value, category, date, description } = this.transactionForm.value;
     const amount = parseFloat(value);
     if (!category || isNaN(amount) || !date) return;
-
     const transId = uuidv4().toString();
     const formatDate = new Date(date).toLocaleDateString('de-DE');
     const desc = description ? sanitizeHtml(description, {
@@ -180,6 +186,10 @@ export class MainPageComponent {
     const goal = this.savingGoals.find(g => g.title === goalTitle);
 
     if(!goal) return;
+    if(goal.deadline && this.parseGermanDate(obj.date) > goal.deadline) {
+      alert("Da das Transaktionsdatum nach dem festgelegten Enddatum des Sparziels liegt, ist die Transaktion nicht zulässig.");
+      return;
+    }
     goal.currentAmount += (obj.type === 'output' ? obj.amount : -obj.amount);
     if(goal.currentAmount > goal.targetAmount) {
       alert("you have transferred more money as planned into the goal " + goal.title);
@@ -191,7 +201,17 @@ export class MainPageComponent {
       goal.currentAmount += obj.amount;
       return;
     }
-    this.transactions.push(obj);
+    if (this.updateAccountStand(obj)) {
+      this.transactions.push(obj);
+    } else {
+      alert('Nicht genügend Geld auf dem Konto. Transaktion abgebrochen.');
+      return;
+    }
+  }
+
+  private parseGermanDate(dateStr: string): Date {
+    const [day, month, year] = dateStr.split('.').map(Number);
+    return new Date(year, month -1 , day);
   }
 
   private handleNormalTransaction(obj: Transaction) {
@@ -215,7 +235,12 @@ export class MainPageComponent {
       this.totalAmount += obj.amount;
       this.remainAmount += obj.amount;
     }
-    this.transactions.push(obj);
+    if (this.updateAccountStand(obj)) {
+      this.transactions.push(obj);
+    } else {
+      alert('Nicht genügend Geld auf dem Konto. Transaktion abgebrochen.');
+      return;
+    }
   }
 
   onDeleteTransaction(index: number): void {
@@ -429,9 +454,14 @@ export class MainPageComponent {
           date: new Date().toLocaleDateString('de-DE'),
           description: type === 'output' ? 'Einzahlung ins Sparziel ' + goal.title : 'Auszahlung vom Sparziel ' + goal.title
         };
-        this.transactions.push(tx);
-        goal.currentAmount += (tx.type === 'output' ? tx.amount : -tx.amount);
-        setTimeout(() => this.renderChart('doughnut'), 0);
+        if (this.updateAccountStand(tx)) {
+          this.transactions.push(tx);
+          goal.currentAmount += (tx.type === 'output' ? tx.amount : -tx.amount);
+          setTimeout(() => this.renderChart('doughnut'), 0);
+        } else {
+          alert('Nicht genügend Geld auf dem Konto. Transaktion abgebrochen.');
+          return;
+        }
       }
     });
   }
@@ -458,5 +488,21 @@ export class MainPageComponent {
     )
     this.goalBudgets = [...baseBudgets, ...fakedGoalBudgets];
     this.fullBudgets = [...this.budgets, ...this.goalBudgets];
+  }
+
+  updateAccountStand(tx: Transaction) {
+    let isValid = true;
+
+    if (tx.type === 'output') {
+      if (tx.amount > this.currentStand) {
+        isValid = false;
+        alert('Nicht genügend Geld auf dem Konto. Transaktion abgebrochen.');
+      } else {
+        this.currentStand -= tx.amount;
+      }
+    } else if (tx.type === 'input') {
+      this.currentStand += tx.amount
+    }
+    return isValid;
   }
 }
