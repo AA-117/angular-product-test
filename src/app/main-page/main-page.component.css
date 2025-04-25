@@ -1,3 +1,12 @@
+.w-full {
+  width: 100%;
+}
+
+.my-2 {
+  margin-top: 8px;
+  margin-bottom: 8px;
+}
+
 .tracker-container {
   max-width: 600px;
   margin: 0 auto;
@@ -208,4 +217,9 @@ th {
 
 .sm-button mat-icon {
   vertical-align: unset;
+}
+
+.recurring-toggle {
+  display: block;
+  margin-bottom: 16px;
 }

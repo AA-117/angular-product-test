@@ -110,6 +110,9 @@
         <mat-datepicker-toggle matSuffix [for]="picker"></mat-datepicker-toggle>
         <mat-datepicker #picker></mat-datepicker>
       </mat-form-field>
+      <mat-slide-toggle formControlName="recurring" color="accent" class="my-2 recurring-toggle">
+        Monthly Recurring
+      </mat-slide-toggle>
       <mat-form-field appearance="outline" class="w-full my-2">
         <mat-label>Description (optional):</mat-label>
         <textarea matInput formControlName="description" rows="2"></textarea>
@@ -123,6 +126,7 @@
         <th>Category</th>
         <th>Date</th>
         <th>Amount</th>
+        <th>Recurring</th>
         <th>Description</th>
         <th>Action</th>
       </tr>
@@ -132,6 +136,9 @@
         <td>{{ transaction.category }}</td>
         <td>{{ transaction.date}}</td>
         <td>{{ transaction.type === 'output' ? '+' : '-'}}{{ transaction.amount | number: '1.2-2' }} €</td>
+        <td>
+          <span>{{ transaction.recurring ? '✅' : '—' }}</span>
+        </td>
         <td>
           <span matTooltip="{{transaction.description}}" class="description-cell">
             {{ transaction.description ||'-'}}
@@ -144,7 +151,7 @@
       </tbody>
     </table>
     <div class="content">
-      <h2>Transaction Chart</h2>
+      <h2>Withdraw Transaction Chart</h2>
       <div class="chart-controls">
         <button mat-raised-button color="primary" (click)="renderChart('doughnut')">Doughnut Chart</button>
         <button mat-raised-button color="primary" (click)="renderChart('bar')">Bar Chart</button>

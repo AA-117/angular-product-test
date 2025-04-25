@@ -94,7 +94,8 @@ export class MainPageComponent {
       category: [''],
       date: [''],
       type: ['output', Validators.required],
-      description: ['']
+      description: [''],
+      recurring: [false]
     });
 
     this.budgetForm = this.fb.group({
@@ -159,7 +160,7 @@ export class MainPageComponent {
   }
 
   onAddTransaction(): void {
-    const { type, value, category, date, description } = this.transactionForm.value;
+    const { type, value, category, date, recurring, description } = this.transactionForm.value;
     const amount = parseFloat(value);
     if (!category || isNaN(amount) || !date) return;
     const transId = uuidv4().toString();
@@ -168,7 +169,7 @@ export class MainPageComponent {
       allowedTags: [],
       allowedAttributes: {}
     }) : '';
-    const newObj: Transaction = {id: transId, category: category, amount: amount, date: formatDate, type: type, description: desc};
+    const newObj: Transaction = {id: transId, category: category, amount: amount, date: formatDate, type: type, description: desc, recurring: recurring};
     const isGoalTransaction = category.startsWith('Goal-');
     if (isGoalTransaction) {
       this.handleGoalTransaction(newObj);
@@ -444,15 +445,16 @@ export class MainPageComponent {
       data: { goal, type }
     });
 
-    dialogRef.afterClosed().subscribe(amount => {
-      if (amount) {
+    dialogRef.afterClosed().subscribe(result => {
+      if (result?.amount) {
         const tx: Transaction = {
           id: uuidv4(),
           category: `Goal-${goal.index + 1}-${goal.title}`,
-          amount,
+          amount: result.amount,
           type,
           date: new Date().toLocaleDateString('de-DE'),
-          description: type === 'output' ? 'Einzahlung ins Sparziel ' + goal.title : 'Auszahlung vom Sparziel ' + goal.title
+          description: type === 'output' ? 'Einzahlung ins Sparziel ' + goal.title : 'Auszahlung vom Sparziel ' + goal.title,
+          recurring: result.recurring ?? false
         };
         if (this.updateAccountStand(tx)) {
           this.transactions.push(tx);

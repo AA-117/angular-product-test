@@ -18,6 +18,10 @@
     <mat-label>Betrag (€)</mat-label>
     <input matInput type="number" [(ngModel)]="amount" min="0" />
   </mat-form-field>
+
+  <mat-slide-toggle [(ngModel)]="recurring" color="accent" class="my-2">
+    Monatlich wiederkehrend
+  </mat-slide-toggle>
 </mat-dialog-content>
 
 <mat-dialog-actions align="end">

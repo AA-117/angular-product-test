@@ -4,5 +4,6 @@ export interface Transaction {
   amount: number,
   date: string,
   type: string,
-  description?: string
+  description?: string,
+  recurring:boolean
 }

@@ -11,6 +11,7 @@ import { SavingGoal} from "../../models/saving-goal.model";
 
 export class GoalTransactionDialogComponent {
   amount: number | null = null;
+  recurring: boolean = false;
 
   constructor(
     public dialogRef: MatDialogRef<GoalTransactionDialogComponent>,
@@ -41,7 +42,10 @@ export class GoalTransactionDialogComponent {
       return;
     }
 
-    this.dialogRef.close(this.amount);
+    this.dialogRef.close({
+      amount: this.amount,
+      recurring: this.recurring
+    });
   }
 
 
