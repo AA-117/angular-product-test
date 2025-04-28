@@ -20,7 +20,7 @@ Chart.register(...registerables)
   styleUrl: './main-page.component.css'
 })
 export class MainPageComponent {
-  tabs = ['Categories & Budgets', 'Transactions', 'Saving Goals'];
+  tabs = ['Categories & Budgets', 'Transactions', 'Saving Goals', 'Monthly Overview'];
   activeTab = this.tabs[0];
 
   categoryOptions = ['Miete', 'Strom & Wasser', 'Internet & Handy', 'Lebensmittel', 'Haushalt', 'Transport / Benzin',

@@ -35,6 +35,7 @@ import {MatProgressBar} from "@angular/material/progress-bar";
 import {AddGoalDialogComponent} from "./add-goal-dialog/add-goal-dialog.component";
 import {MatDialogActions, MatDialogContent, MatDialogModule} from "@angular/material/dialog";
 import {GoalTransactionDialogComponent} from "./goal-transaction-dialog/goal-transaction-dialog.component";
+import {MonthlySummaryComponent} from "./monthly-summary/monthly-summary.component";
 
 registerLocaleData(localeDe, 'de-DE');
 
@@ -48,7 +49,8 @@ registerLocaleData(localeDe, 'de-DE');
     LoggingToolPageComponent,
     NeobankDashboardComponent,
     AddGoalDialogComponent,
-    GoalTransactionDialogComponent
+    GoalTransactionDialogComponent,
+    MonthlySummaryComponent
   ],
   imports: [
     BrowserModule,

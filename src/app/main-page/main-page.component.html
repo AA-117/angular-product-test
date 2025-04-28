@@ -202,4 +202,7 @@
       </mat-card>
     </div>
   </div>
+  <div class="content" *ngIf="activeTab === 'Monthly Overview'">
+    <app-monthly-summary [transactions]="transactions"></app-monthly-summary>
+  </div>
 </div>
