@@ -1,5 +1,6 @@
 import {Component, Input} from '@angular/core';
 import {Transaction} from "../../models/transaction.model";
+import {MatDatepicker} from "@angular/material/datepicker";
 
 @Component({
   selector: 'app-monthly-summary',
@@ -12,6 +13,8 @@ export class MonthlySummaryComponent {
   startDate: Date = new Date(new Date().getFullYear(), new Date().getMonth(), 1);
   endDate: Date = new Date();
   filteredTransactions: Transaction[] = [];
+
+  selectedMonth: Date | null = null;
 
   filterTransactions(): void {
     if (!this.startDate || !this.endDate) {
@@ -32,4 +35,26 @@ export class MonthlySummaryComponent {
     const [day, month, year] = dateStr.split('.').map(Number);
     return new Date(year, month - 1, day);
   }
+
+  chosenMonthHandler(normalizedMonth: Date, datepicker: MatDatepicker<any>) {
+    this.selectedMonth = normalizedMonth;
+    datepicker.close();
+    this.filterTransactionsByMonth();
+  }
+
+  filterTransactionsByMonth() {
+    if (!this.selectedMonth) {
+      this.filteredTransactions = [];
+      return;
+    }
+
+    const selectedMonth = this.selectedMonth.getMonth();
+    const selectedYear = this.selectedMonth.getFullYear();
+
+    this.filteredTransactions = this.transactions.filter(tx => {
+      const [day, month, year] = tx.date.split('.').map(Number);
+      return month - 1 === selectedMonth && year === selectedYear;
+    });
+  }
+
 }

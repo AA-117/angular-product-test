@@ -22,6 +22,7 @@ import {MatFormField, MatInput, MatInputModule, MatLabel} from "@angular/materia
 import {MatSelect} from "@angular/material/select";
 import {MAT_DATE_LOCALE, MatNativeDateModule, MatOption} from "@angular/material/core";
 import {
+  MatDatepicker,
   MatDatepickerModule,
   MatDatepickerToggle
 } from "@angular/material/datepicker";
@@ -80,7 +81,8 @@ registerLocaleData(localeDe, 'de-DE');
     MatProgressBar,
     MatDialogModule,
     MatDialogContent,
-    MatDialogActions
+    MatDialogActions,
+    MatDatepicker
   ],
   providers: [
     {provide: MAT_DATE_LOCALE, useValue: 'de'},
