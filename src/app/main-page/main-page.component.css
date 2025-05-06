@@ -11,6 +11,7 @@
   max-width: 600px;
   margin: 0 auto;
   font-family: Arial, sans-serif;
+  background-color: white;
 }
 
 .tabs {
@@ -222,4 +223,8 @@ th {
 .recurring-toggle {
   display: block;
   margin-bottom: 16px;
+}
+
+h1 {
+  text-align: center;
 }
